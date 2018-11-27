@@ -1,3 +1,3 @@
 git add --all
-git commit -m "Start Sensor"
+git commit -m "finish Sensor"
 git push -u origin master
