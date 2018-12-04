@@ -35,12 +35,12 @@ import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements TextToSpeech.OnInitListener {
     protected Button btHomepage, btDial, btCall, btSms, btMap, btRecog, btTts,
-            btEcho, btContact, btBitmap, btToastPs, btService, btLocation;
-    protected TextView tvRecog;
+            btEcho, btContact, btBitmap, btToastPs, btService, btLocation, btgeo, btcall;
+    protected TextView tvRecog, TextVoice;
     protected EditText etTts, etDelay;
     public ImageView ivBitmap;
     protected TextToSpeech tts;
-    private static final int CODE_RECOG = 1215, CODE_ECHO = 1227, CODE_CONTACT = 1529;
+    private static final int CODE_RECOG = 1215, CODE_ECHO = 1227, CODE_CONTACT = 1529, CODE_CALL = 1333, CODE_CALL1 = 1444, CODE_CALL2 = 1555;
     protected boolean bService = false;
     protected String sBitmapUrl = "https://sites.google.com/site/yongheuicho/_/rsrc/1313446792839/config/customLogo.gif";
     protected TelephonyManager telephonyManager;
@@ -50,6 +50,8 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
     protected SensorManager sensorManager;
     protected Sensor senAccel;
     protected MySensorListener mySensorListener;
+    protected double latitude, longitude, altitude;
+    private String Name;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -157,6 +159,19 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
             }
         });
 
+
+        TextVoice = (TextView) findViewById(R.id.TextVoice);
+        btcall = (Button) findViewById(R.id.btcall);
+        btcall.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String hello = TextVoice.getText().toString();
+                speakStr(hello);
+
+                voiceRecog(CODE_CALL);
+            }
+        });
+
         locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         myLocationListener = new MyLocationListener();
         long minTime = 1000; //ms단위
@@ -181,13 +196,22 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
             }
         });
 
-        sensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         senAccel = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mySensorListener = new MySensorListener(this);
         if (senAccel != null) {
             sensorManager.registerListener(mySensorListener, senAccel, SensorManager.SENSOR_DELAY_NORMAL);
 
         }
+
+        btgeo = (Button) findViewById(R.id.btgeo);
+        btgeo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                showLocation();
+                speakLocation(latitude, longitude);
+            }
+        });
     }
 
     private void speakLocation(double latitude, double longitude) {
@@ -202,18 +226,23 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
             String country = lsAddress.get(0).getCountryName();
             String postalCode = lsAddress.get(0).getPostalCode();
             String knownName = lsAddress.get(0).getFeatureName();
-            speakStr("현재 있는 나라는" +country + "입니다.");
+            speakStr("현재 있는 나라는" + country + "입니다." + "현재 도시는" + city + "입니다." + "현재 건물은" + knownName + "입니다");
+
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("geo:" + latitude + "," + longitude + "?z=15"));    //"geo:s36.321609,127.337957?z=20"
+            startActivity(intent);
+
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     private void showLocation() {
-        double latitude, longitude, altitude;
         latitude = myLocationListener.latitude;
-        longitude  = myLocationListener.longitude;
+        longitude = myLocationListener.longitude;
         altitude = myLocationListener.altitude;
         Toast.makeText(this, "Latitude: " + latitude + ", Longitude = " + longitude + ", Altitude  " + altitude, Toast.LENGTH_SHORT).show();
+
     }
 
     private void updateService() {
@@ -338,6 +367,48 @@ public class MainActivity extends AppCompatActivity implements TextToSpeech.OnIn
                     String sPhoneNum = cursor.getString(1);
                     cursor.close();
                     Toast.makeText(this, sName + " = " + sPhoneNum, Toast.LENGTH_LONG).show();
+                }
+            } else if (requestCode == CODE_CALL) {
+                ArrayList<String> arList = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                String str = arList.get(0);
+                if (str.equals("전화 걸기") == true) {
+                    speakStr("누구에게 전화 걸까요");
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    voiceRecog(CODE_CALL1);
+                }
+
+            } else if (requestCode == CODE_CALL1) {
+                ArrayList<String> arList = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                Name = arList.get(0);
+                tvRecog.setText(Name);
+
+                if (Name.equals(Name) == true) {
+                    speakStr(Name + "에게 전화를 걸까요?");
+                    voiceRecog(CODE_CALL2);
+                }
+
+            } else if (requestCode == CODE_CALL2) {
+                ArrayList<String> arList = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                String str = arList.get(0);
+                if (str.equals("예") == true) {
+
+                    Toast.makeText(getApplicationContext(), Name, Toast.LENGTH_LONG).show();
+                    Intent intent = new Intent(Intent.ACTION_CALL, Uri.parse("tel:" + getPhoneNumFromName(Name)));
+                    if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
+                        // TODO: Consider calling
+                        //    ActivityCompat#requestPermissions
+                        // here to request the missing permissions, and then overriding
+                        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                        //                                          int[] grantResults)
+                        // to handle the case where the user grants the permission. See the documentation
+                        // for ActivityCompat#requestPermissions for more details.
+                        return;
+                    }
+                    startActivity(intent);
                 }
             }
         }

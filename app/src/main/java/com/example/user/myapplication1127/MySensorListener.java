@@ -22,7 +22,7 @@ public class MySensorListener implements SensorEventListener {
             accelX = event.values[0];
             accelY = event.values[1];
             accelZ = event.values[2];
-            Toast.makeText(context, "X: " +accelX+ "Y: "+ accelY +  "Z: " + accelZ, Toast.LENGTH_SHORT).show();
+            //Toast.makeText(context, "X: " +accelX+ "Y: "+ accelY +  "Z: " + accelZ, Toast.LENGTH_SHORT).show();
         }
 
     }

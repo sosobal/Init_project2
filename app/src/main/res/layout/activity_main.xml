@@ -130,6 +130,28 @@
             android:layout_height="wrap_content"
             android:id="@+id/btLocation"
             android:text="Location"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btgeo"
+            android:text="Google Map"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/btcall"
+            android:text="Recogcall"/>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/TextVoice"
+            android:hint="textvoie"/>
+
+
+
+
+
     </LinearLayout>
 
 </LinearLayout>
